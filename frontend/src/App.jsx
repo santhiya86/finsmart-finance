@@ -11,7 +11,7 @@ import ExportData from './pages/ExportData';
 import RecurringTransactions from './pages/RecurringTransactions';
 import AIInsights from './pages/AIInsights';
 import GoalPlanner from './pages/GoalPlanner';
-import EmailAlerts from './pages/EmailAlerts';
+
 import Sidebar from './components/Sidebar';
 
 const PrivateLayout = ({ children }) => {
@@ -43,7 +43,7 @@ function AppRoutes() {
       <Route path="/budget" element={<PrivateLayout><BudgetTracker /></PrivateLayout>} />
       <Route path="/goals" element={<PrivateLayout><GoalPlanner /></PrivateLayout>} />
       <Route path="/recurring" element={<PrivateLayout><RecurringTransactions /></PrivateLayout>} />
-      <Route path="/email-alerts" element={<PrivateLayout><EmailAlerts /></PrivateLayout>} />
+      
       <Route path="/export" element={<PrivateLayout><ExportData /></PrivateLayout>} />
       <Route path="/ai-insights" element={<PrivateLayout><AIInsights /></PrivateLayout>} />
       <Route path="*" element={<Navigate to="/" replace />} />
