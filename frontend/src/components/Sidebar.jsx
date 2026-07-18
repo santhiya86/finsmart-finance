@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { MdDashboard, MdAddCircleOutline, MdBarChart, MdLogout, MdMenu, MdClose, MdAccountBalanceWallet, MdTrackChanges, MdDownload, MdRepeat, MdAutoAwesome, MdFlag, MdEmail } from 'react-icons/md';
+import { MdDashboard, MdAddCircleOutline, MdBarChart, MdLogout, MdMenu, MdClose, MdAccountBalanceWallet, MdTrackChanges, MdDownload, MdRepeat, MdAutoAwesome, MdFlag } from 'react-icons/md';
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: MdDashboard, end: true },
@@ -10,7 +10,7 @@ const navItems = [
   { to: '/budget', label: 'Budget Tracker', icon: MdTrackChanges },
   { to: '/goals', label: 'Goal Planner', icon: MdFlag },
   { to: '/recurring', label: 'Recurring', icon: MdRepeat },
-  { to: '/email-alerts', label: 'Email Alerts', icon: MdEmail },
+  
   { to: '/export', label: 'Export Data', icon: MdDownload },
   { to: '/ai-insights', label: 'AI Insights', icon: MdAutoAwesome },
 ];
