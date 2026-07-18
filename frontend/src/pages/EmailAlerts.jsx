@@ -58,8 +58,56 @@ export default function EmailAlerts() {
         </p>
       </div>
 
-   
-    
+      {/* Automatic Budget Alert explanation */}
+      <div className="card border-2 border-primary-100 bg-primary-50">
+        <div className="flex items-center gap-2 mb-3">
+          <MdAutoAwesome className="text-xl text-primary-500" />
+          <h2 className="text-base font-bold text-primary-700">🤖 Automatic Budget Alerts</h2>
+        </div>
+        <div className="space-y-2">
+          <div className="flex gap-3 p-3 bg-white rounded-xl">
+            <span className="w-6 h-6 rounded-full bg-yellow-500 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">!</span>
+            <div>
+              <p className="text-sm text-slate-700 font-medium">⚠️ Warning at 80%</p>
+              <p className="text-xs text-slate-500 mt-0.5">When you add an expense and spending reaches 80% of your budget — email sent automatically</p>
+            </div>
+          </div>
+          <div className="flex gap-3 p-3 bg-white rounded-xl">
+            <span className="w-6 h-6 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">!</span>
+            <div>
+              <p className="text-sm text-slate-700 font-medium">🔴 Alert at 100%</p>
+              <p className="text-xs text-slate-500 mt-0.5">When spending exceeds 100% of budget — budget exceeded email sent automatically</p>
+            </div>
+          </div>
+        </div>
+        <div className="mt-3 p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+          <p className="text-xs text-emerald-700 font-medium">
+            ✅ No button needed! Budget alert emails are sent automatically to each user's registered email when they add an expense that crosses the threshold.
+          </p>
+        </div>
+      </div>
+
+      {/* How automatic alert works */}
+      <div className="card bg-slate-50 border border-slate-100">
+        <div className="flex items-center gap-2 mb-3">
+          <MdWarning className="text-xl text-yellow-500" />
+          <h2 className="text-sm font-bold text-slate-700">How Automatic Alert Works</h2>
+        </div>
+        <div className="space-y-2">
+          {[
+            ['1', 'Set a budget in Budget Tracker (e.g. Food = Rs.5000)', 'bg-primary-500'],
+            ['2', 'Add any Food expense transaction', 'bg-primary-500'],
+            ['3', 'System checks: total Food spent ÷ Rs.5000 budget', 'bg-primary-500'],
+            ['4', 'If result ≥ 80% → Email sent automatically to your inbox', 'bg-yellow-500'],
+            ['5', 'If result ≥ 100% → Budget exceeded email sent automatically', 'bg-red-500'],
+          ].map(([num, text, color]) => (
+            <div key={num} className="flex gap-3 items-start">
+              <span className={`w-6 h-6 rounded-full ${color} text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5`}>{num}</span>
+              <p className="text-sm text-slate-600">{text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Monthly Summary — manual send */}
       <div>
