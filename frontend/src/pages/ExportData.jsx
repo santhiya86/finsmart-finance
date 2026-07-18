@@ -91,15 +91,8 @@ export default function ExportData() {
           </button>
         </div>
       </div>
-      <div className="card bg-blue-50 border border-blue-100">
-        <h3 className="text-sm font-semibold text-blue-700 mb-2">💡 How to save PDF</h3>
-        <ol className="text-xs text-blue-600 space-y-1 list-decimal list-inside">
-          <li>Click "Download PDF" — a print window opens</li>
-          <li>Change <strong>Destination</strong> to <strong>"Save as PDF"</strong></li>
-          <li>Click Save</li>
-          <li>If popup blocked, an HTML file downloads — open it and press Ctrl+P</li>
-        </ol>
-      </div>
+     
+      
     </div>
   );
 }
