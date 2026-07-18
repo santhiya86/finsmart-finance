@@ -12,6 +12,51 @@ const getMonthRange = (date) => {
   return { start, end };
 };
 
+const checkAndSendBudgetAlert = async (userId, category, txDate) => {
+  try {
+    const year = txDate.getFullYear();
+    const month = txDate.getMonth() + 1;
+    const monthStr = `${year}-${String(month).padStart(2, '0')}`;
+
+    const budget = await Budget.findOne({
+      user: userId,
+      category: category,
+      month: monthStr,
+    });
+
+    if (!budget) {
+      console.log(`[Budget Check] No budget set for ${category} in ${monthStr}`);
+      return;
+    }
+
+    const { start, end } = getMonthRange(txDate);
+
+    const allExpenses = await Transaction.find({
+      user: userId,
+      type: 'expense',
+      category: category,
+      date: { $gte: start, $lte: end },
+    });
+
+    const totalSpent = allExpenses.reduce((sum, t) => sum + t.amount, 0);
+    const percentage = Math.round((totalSpent / budget.amount) * 100);
+
+    console.log(
+      `[Budget Check] ${category}: spent=Rs.${totalSpent}, ` +
+      `budget=Rs.${budget.amount}, percentage=${percentage}%`
+    );
+
+    if (percentage >= 80) {
+      const user = await User.findById(userId);
+      if (user) {
+        await sendAutoAlert(user, category, totalSpent, budget.amount, percentage);
+      }
+    }
+  } catch (err) {
+    console.error('[Budget Alert Error]:', err.message);
+  }
+};
+
 const getTransactions = async (req, res) => {
   try {
     const { category, startDate, endDate, type } = req.query;
@@ -36,7 +81,10 @@ const getTransactions = async (req, res) => {
 
 const addTransaction = async (req, res) => {
   try {
-    const { title, amount, type, category, date, notes, isRecurring, recurringId } = req.body;
+    const {
+      title, amount, type, category,
+      date, notes, isRecurring, recurringId,
+    } = req.body;
 
     if (!title || !amount || !type || !category) {
       return res.status(400).json({ message: 'Please fill all required fields' });
@@ -45,7 +93,6 @@ const addTransaction = async (req, res) => {
     const txDate = date ? new Date(date) : new Date();
     const parsedAmount = parseFloat(amount);
 
-    // Save transaction first
     const transaction = await Transaction.create({
       user: req.user._id,
       title,
@@ -58,53 +105,15 @@ const addTransaction = async (req, res) => {
       recurringId: recurringId || null,
     });
 
-    // Send response immediately — don't block on email
+    if (type === 'expense') {
+      process.nextTick(() => {
+        checkAndSendBudgetAlert(req.user._id, category, txDate)
+          .catch(err => console.error('[Budget Alert Uncaught]:', err.message));
+      });
+    }
+
     res.status(201).json(transaction);
 
-    // AUTO BUDGET ALERT — runs after response sent, only for expenses
-    if (type === 'expense') {
-      try {
-        const year = txDate.getFullYear();
-        const month = txDate.getMonth() + 1;
-        const monthStr = `${year}-${String(month).padStart(2, '0')}`;
-
-        // Check if budget exists for this category
-        const budget = await Budget.findOne({
-          user: req.user._id,
-          category: category,
-          month: monthStr,
-        });
-
-        if (!budget) {
-          console.log(`[Budget Check] No budget set for ${category} in ${monthStr} — skipping alert`);
-          return;
-        }
-
-        const { start, end } = getMonthRange(txDate);
-
-        // Get total spent for this category this month (includes newly saved transaction)
-        const allExpenses = await Transaction.find({
-          user: req.user._id,
-          type: 'expense',
-          category: category,
-          date: { $gte: start, $lte: end },
-        });
-
-        const totalSpent = allExpenses.reduce((sum, t) => sum + t.amount, 0);
-        const percentage = Math.round((totalSpent / budget.amount) * 100);
-
-        console.log(`[Budget Check] ${category}: spent=Rs.${totalSpent}, budget=Rs.${budget.amount}, percentage=${percentage}%`);
-
-        if (percentage >= 80) {
-          const user = await User.findById(req.user._id);
-          if (user) {
-            await sendAutoAlert(user, category, totalSpent, budget.amount, percentage);
-          }
-        }
-      } catch (alertErr) {
-        console.error('[Budget Alert Error]:', alertErr.message);
-      }
-    }
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -113,7 +122,8 @@ const addTransaction = async (req, res) => {
 const updateTransaction = async (req, res) => {
   try {
     const transaction = await Transaction.findById(req.params.id);
-    if (!transaction) return res.status(404).json({ message: 'Transaction not found' });
+    if (!transaction)
+      return res.status(404).json({ message: 'Transaction not found' });
     if (transaction.user.toString() !== req.user._id.toString())
       return res.status(401).json({ message: 'Not authorized' });
     const updated = await Transaction.findByIdAndUpdate(
@@ -128,7 +138,8 @@ const updateTransaction = async (req, res) => {
 const deleteTransaction = async (req, res) => {
   try {
     const transaction = await Transaction.findById(req.params.id);
-    if (!transaction) return res.status(404).json({ message: 'Transaction not found' });
+    if (!transaction)
+      return res.status(404).json({ message: 'Transaction not found' });
     if (transaction.user.toString() !== req.user._id.toString())
       return res.status(401).json({ message: 'Not authorized' });
     await transaction.deleteOne();
@@ -141,8 +152,12 @@ const deleteTransaction = async (req, res) => {
 const getSummary = async (req, res) => {
   try {
     const transactions = await Transaction.find({ user: req.user._id });
-    const totalIncome = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-    const totalExpense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+    const totalIncome = transactions
+      .filter(t => t.type === 'income')
+      .reduce((s, t) => s + t.amount, 0);
+    const totalExpense = transactions
+      .filter(t => t.type === 'expense')
+      .reduce((s, t) => s + t.amount, 0);
     const balance = totalIncome - totalExpense;
 
     const monthly = {};
@@ -155,7 +170,8 @@ const getSummary = async (req, res) => {
 
     const categoryBreakdown = {};
     transactions.filter(t => t.type === 'expense').forEach(t => {
-      categoryBreakdown[t.category] = (categoryBreakdown[t.category] || 0) + t.amount;
+      categoryBreakdown[t.category] =
+        (categoryBreakdown[t.category] || 0) + t.amount;
     });
 
     res.json({ totalIncome, totalExpense, balance, monthly, categoryBreakdown });
